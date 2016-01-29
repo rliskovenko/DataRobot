@@ -1,0 +1,67 @@
+---
+- hosts: datarobot
+  tasks:
+    - name: Install EPEL Centos7
+      sudo: true
+      yum:  name=https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm state=present
+      when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int == 7
+      tags:
+        - yum
+        - yum-epel
+
+    - name: Install RepoForge Centos7
+      sudo: true
+      yum:  name=http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el7.rf.x86_64.rpm state=present
+      when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int == 7
+      tags:
+        - yum
+        - yum-repoforge
+
+    - name: Updating
+      sudo: true
+      shell: yum update -y
+      tags:
+        - yum
+        - yum-update
+
+    - name: Installing prerequired soft
+      sudo: true
+      yum: pkg={{ item }} enablerepo=epel state=present
+      with_items:
+        - git
+        - wget
+        - curl
+        - pcre-tools
+        - tcping
+        - nc
+        - openssh-clients
+        - bind-utils
+        - vim
+
+    # Clone repository if not found
+    - stat: path={{ app_path }}
+      register: app_stat
+    - name: Fetching app code from repo
+      git: repo=https://github.com/rliskovenko/DataRobot.git
+           dest={{ app_path }}
+           accept_hostkey=yes
+      when: app_stat.stat.exists == False
+
+    - name: Create log directory
+      file: state=directory path={{ app_path }}/log
+
+    - name: Create config directory
+      file: state=directory path={{ app_path }}/config
+
+    - name: Copy app config files
+      template: src=roles/generic/templates/config-{{ stage }}.json dest={{ app_path }}/config/config.json
+      tags:
+        - app-config
+
+    - name: configure logrotate
+      sudo: true
+      template: src=roles/generic/templates/logrotate.j2 dest=/etc/logrotate.d/datarobot
+      tags:
+        - logrotate
+
+- include: roles/mongodb/install.yml

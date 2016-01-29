@@ -1,0 +1,49 @@
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "centos/7"
+  config.vm.hostname = "datarobot.vagrant"
+  config.vm.network :forwarded_port, guest: 8080, host: 8080
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
+    vb.cpus = 1
+    vb.memory = 1024
+    vb.customize ["modifyvm", :id, "--ioapic", "on"]
+  end
+
+  config.vm.provision "shell" do |shell|
+    ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+    shell.inline = <<-SHELL
+      echo "Install id_rsa.pub of the current user to VM"
+      mkdir -p /root/.ssh
+      echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
+      echo #{ssh_pub_key} >> /root/.ssh/authorized_keys
+      chmod 400 /root/.ssh
+
+      echo "Configure login chain for datarobot@"
+      useradd -m -G wheel,vagrant datarobot
+      cp -Rnf /home/vagrant/.ssh /home/datarobot
+      chown datarobot:vagrant /home/datarobot
+      chown -R datarobot:datarobot /home/datarobot/.ssh
+      chmod 400 /home/datarobot/.ssh/*
+      chmod 750 /home/datarobot
+      echo "vagrant ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vagrant
+      echo "datarobot ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/datarobot
+
+      echo "Configure system security settings"
+      systemctl enable firewalld.service
+      systemctl start firewalld.service
+      systemctl disable postfix.service
+      systemctl stop postfix.service
+      firewall-cmd --zone=public --add-port=8080/tcp --permanent
+      firewall-cmd --reload
+    SHELL
+  end
+
+  # Install basic Linux and development tools
+  config.vm.provision :shell do |shell|
+    shell.privileged = true
+    shell.inline = 'yum -y groupinstall "Base" "Development tools"'
+  end
+end

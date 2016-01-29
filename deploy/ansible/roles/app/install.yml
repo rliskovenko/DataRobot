@@ -1,0 +1,9 @@
+---
+- hosts: flask-app
+  sudo: true
+  tasks:
+    - include: tasks/tasks.yml
+  handlers:
+    - include: handlers/handlers.yml
+  tags:
+    - app

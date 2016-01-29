@@ -1,0 +1,11 @@
+---
+- name: add MongoDB repo
+  sudo: true
+  get_url: dest=/etc/yum.repos.d/mongodb.repo url=https://repo.mongodb.org/yum/redhat/mongodb-org.repo
+
+- name: install mongodb-server
+  sudo: true
+  yum: pkg=mongodb-org
+
+- name: start mongodb-server
+  service: name=mongod enabled=on state=started

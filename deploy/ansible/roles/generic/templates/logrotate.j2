@@ -1,0 +1,12 @@
+{{ app_path }}/log/*.log {
+    create 0644 {{ remote_user }} {{ remote_user }}
+    rotate 50
+    size 10M
+    dateext
+    dateformat -%Y%m%d-%s
+    delaycompress
+    missingok
+    notifempty
+    compress
+    copytruncate
+}

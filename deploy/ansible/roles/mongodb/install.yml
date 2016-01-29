@@ -1,0 +1,9 @@
+---
+- hosts: mongodb
+  sudo: true
+  tasks:
+    - include: tasks/tasks.yml
+  handlers:
+    - include: handlers/handlers.yml
+  tags:
+    - mongodb
