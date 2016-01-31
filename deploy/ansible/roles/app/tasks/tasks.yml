@@ -18,3 +18,16 @@
   tags:
     - app-deps
 
+- name: Install init script
+  template: src=templates/systemd.service dest=/etc/systemd/system/{{ app_name }}.service mode=0644
+  tags:
+    - app-init
+
+- name: systemctl-reload
+  sudo: true
+  shell: systemctl daemon-reload
+  tags:
+    - app-init
+
+- name: restart {{ app_name }}
+  service: name={{ app_name }} state=started

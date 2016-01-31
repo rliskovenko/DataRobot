@@ -1,4 +1,5 @@
 ---
 app_path: /home/datarobot/datarobot
+app_name: datarobot
 stage: dev
 remote_user: datarobot
