@@ -3,6 +3,7 @@ import string
 import app
 import json
 import unittest
+from datetime import datetime
 
 
 App = app.app
@@ -35,7 +36,7 @@ testSet = {
                "md5checksum": "ffffff232b64ce94fdd0e4539ad0d44f",
                "name": "Carl Doe",
                "uid": "13"}''',
-        '''{"date": "2015-15-12T14:37:00.451765",
+        '''{"date": "2015-05-14T14:37:00.451765",
                "md5checksum": "ffffff232b64ce94fdd0e4539ad0d44f",
                "name": "Rozalie Doe",
                "uid": "14"}'''
@@ -51,11 +52,11 @@ class DataRobotTestCase( unittest.TestCase ):
 
     def __test_get( self, data ):
         jsonData = json.loads( data )
+        __makeGetUrl = lambda ( x ): '/' + '/'.join( [ x['uid'], datetime.strptime( x['date'], "%Y-%m-%dT%H:%M:%S.%f" ).strftime( "%Y-%m-%d" ) ] )
         if isinstance( jsonData, list ):
-            # return [ self.app.get( '/', { "uid": obj['uid'], "date": obj['date'] } ) for obj in jsonData ]
-            return [ self.app.get( '/'.join( [ obj['uid'], obj['date'] ] ) ) for obj in jsonData ]
+            return [ self.app.get( __makeGetUrl( obj ) ) for obj in jsonData ]
         else:
-            return self.app.get( '/'.join( [ jsonData['uid'], jsonData['date'] ] ) )
+            return self.app.get( __makeGetUrl( jsonData ) )
 
     def __run_test(self, data=testSet, sub=__test_add ):
         for ( expected, tests ) in data.iteritems():
