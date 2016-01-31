@@ -65,3 +65,4 @@
         - logrotate
 
 - include: roles/mongodb/install.yml
+- include: roles/app/install.yml

@@ -1,0 +1,20 @@
+---
+- name: Install Python
+  sudo: true
+  yum: pkg={{ item }} enablerepo=epel state=present
+  with_items:
+    - python
+    - python-pip
+  tags:
+    - app-deps
+
+- name: Pull fresh version from repository
+  shell: cd {{ app_path }} && git pull
+  tags:
+    app-pull
+
+- name: Install Python dependencies
+  shell: pip install -r {{ app_path }}/requirements.txt
+  tags:
+    - app-deps
+
